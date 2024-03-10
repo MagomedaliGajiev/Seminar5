@@ -1,12 +1,8 @@
 ﻿using Seminar5.DTO;
 using Seminar5.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Seminar5.Services
 {
@@ -45,6 +41,7 @@ namespace Seminar5.Services
                     Confirmed(message.Id);
                     break;
                 case Command.Messaged:
+                    Messaged(message);
                     break;
             }
         }
@@ -66,5 +63,33 @@ namespace Seminar5.Services
             }
             context.SaveChanges();
         }
+
+        public void Messaged(TCPMessage message)
+        {
+            using var context = new ChatContext();
+            var sender = context.Users.FirstOrDefault(u => u.Name == message.SenderName);
+            var consumer = context.Users.FirstOrDefault(u => u.Name == message.ConsumerName);
+
+            if (sender != null && consumer != null)
+            {
+                var newMessage = new Message
+                {
+                    AutorId = sender.Id,
+                    ConsumerId = consumer.Id,
+                    Content = message.Text,
+                    isRecieved = false
+                };
+
+                context.Messages.Add(newMessage);
+                context.SaveChanges();
+
+                Console.WriteLine($"Message from {message.SenderName} to {message.ConsumerName} saved successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Sender or consumer not found. Message not saved.");
+            }
+        }
     }
+
 }
